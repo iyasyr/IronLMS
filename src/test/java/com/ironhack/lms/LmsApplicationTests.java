@@ -1,10 +1,10 @@
-package com.ironhack.ironlms;
+package com.ironhack.lms;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class IronlmsApplicationTests {
+class LmsApplicationTests {
 
 	@Test
 	void contextLoads() {
