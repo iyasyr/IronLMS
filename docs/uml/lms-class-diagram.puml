@@ -1,115 +1,102 @@
 @startuml
-title IronLMS - Class Diagram (strict top→bottom)
+title IronLMS - Class Diagram (clean; fixed blocks)
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam linetype ortho
-skinparam package {
-  BorderColor #B0B0B0
-  BackgroundColor white   ' opaque so lines behind don't show
+left to right direction
+
+' ===== Classes (multi-line blocks only) =====
+abstract class User {
+  Long id
+  String email
+  String passwordHash
+  String fullName
+  Role role
+  Instant createdAt
 }
 
-' ---- global layout
-top to bottom direction
-
-' ========== Tier 1: Users ==========
-package "Auth & Users" as P_USERS {
-  left to right direction
-  abstract class User {
-    Long id
-    String email
-    String passwordHash
-    String fullName
-    Role role
-    Instant createdAt
-  }
-  class Student extends User {
-  String studentNumber }
-  class Instructor extends User {
-  String bio }
+class Student {
+  String studentNumber
 }
 
-' ========== Tier 2: Content ==========
-package "Learning Content" as P_CONTENT {
-  left to right direction
-  class Course {
-    Long id
-    String title
-    String description
-    CourseStatus status
-    Instant createdAt
-    Instant publishedAt
-  }
-  class Lesson {
-    Long id
-    String title
-    String contentUrl
-    int orderIndex
-  }
-  class Assignment {
-    Long id
-    String title
-    String instructions
-    Instant dueAt
-    int maxPoints
-    boolean allowLate
-  }
+class Instructor {
+  String bio
 }
 
-' ========== Tier 3: Enrollment ==========
-package "Enrollment" as P_ENROLL {
-  class Enrollment {
-    Long id
-    Instant enrolledAt
-    EnrollmentStatus status
-  }
+class Course {
+  Long id
+  String title
+  String description
+  CourseStatus status
+  Instant createdAt
+  Instant publishedAt
 }
 
-' ========== Tier 4: Submissions ==========
-package "Assessment" as P_ASSESS {
-  class Submission {
-    Long id
-    Instant submittedAt
-    String artifactUrl
-    SubmissionStatus status
-    Integer score
-    String feedback
-    int version
-  }
+class Lesson {
+  Long id
+  String title
+  String contentUrl
+  int orderIndex
 }
 
-' ========== Common (enums) off to the side ==========
-package "Common" as P_COMMON {
-  hide <<enum>> members
-  enum Role <<enum>> {
-  ADMIN; INSTRUCTOR; STUDENT }
-  enum CourseStatus <<enum>> { DRAFT; PUBLISHED; ARCHIVED }
-  enum EnrollmentStatus <<enum>> { ACTIVE; CANCELLED; COMPLETED }
-  enum SubmissionStatus <<enum>> { SUBMITTED; GRADED; RESUBMIT_REQUESTED }
+class Assignment {
+  Long id
+  String title
+  String instructions
+  Instant dueAt
+  int maxPoints
+  boolean allowLate
 }
 
-' ---- keep grid (packages stay in tiers)
-P_USERS   -[hidden]down-> P_CONTENT
-P_CONTENT -[hidden]down-> P_ENROLL
-P_ENROLL  -[hidden]down-> P_ASSESS
-P_USERS   -[hidden]->     P_COMMON
-P_CONTENT -[hidden]->     P_COMMON
-P_ENROLL  -[hidden]->     P_COMMON
-P_ASSESS  -[hidden]->     P_COMMON
+class Enrollment {
+  Long id
+  Instant enrolledAt
+  EnrollmentStatus status
+}
 
-' ---------- Inheritance ----------
+class Submission {
+  Long id
+  Instant submittedAt
+  String artifactUrl
+  SubmissionStatus status
+  Integer score
+  String feedback
+  int version
+}
+
+enum Role {
+  ADMIN
+  INSTRUCTOR
+  STUDENT
+}
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+enum EnrollmentStatus {
+  ACTIVE
+  CANCELLED
+  COMPLETED
+}
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  RESUBMIT_REQUESTED
+}
+
+' ===== Inheritance =====
 User <|-- Student
 User <|-- Instructor
 
-' ---------- Relationships (all vertical within columns) ----------
-Instructor "1" -down-> "0..*" Course : creates
-Course "1" -down-> "0..*" Lesson : has
-Course "1" -down-> "0..*" Assignment : contains
+' ===== Relationships =====
+Instructor "1" -down-> "0..*" Course : \ncreates
+Course     "1" -down-> "0..*" Lesson : \nhas
+Course     "1" -down-> "0..*" Assignment : \ncontains
+Assignment "1" -right-> "0..*" Submission : receives
+Submission "1" -left->  "1"   Student : \nauthoredBy
+Enrollment "1" -left->  "1"   Course  : \nfor
 
-Student "1" -down-> "0..*" Enrollment : enrolls >
-Enrollment "1" -up-> "1" Course : for
-
-Assignment "1" -down-> "0..*" Submission : receives >
-Submission "1" -up-> "1" Student : authoredBy >
 
 @enduml
