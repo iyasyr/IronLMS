@@ -1,25 +1,20 @@
 @startuml
-title IronLMS - Class Diagram (cornered layout)
+title IronLMS - Class Diagram (strict top→bottom)
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam linetype ortho
 skinparam package {
   BorderColor #B0B0B0
-  BackgroundColor white     ' opaque so lines behind are hidden
+  BackgroundColor white   ' opaque so lines behind don't show
 }
 
-' Hide enum members to keep boxes compact (optional)
-hide <<enum>> members
+' ---- global layout
+top to bottom direction
 
-left to right direction
-
-' =======================
-' Top-left: Auth & Users
-' =======================
+' ========== Tier 1: Users ==========
 package "Auth & Users" as P_USERS {
-  top to bottom direction
-
+  left to right direction
   abstract class User {
     Long id
     String email
@@ -28,22 +23,15 @@ package "Auth & Users" as P_USERS {
     Role role
     Instant createdAt
   }
-
   class Student extends User {
-    String studentNumber
-  }
-
+  String studentNumber }
   class Instructor extends User {
-    String bio
-  }
+  String bio }
 }
 
-' =========================
-' Top-right: Learning Content
-' =========================
+' ========== Tier 2: Content ==========
 package "Learning Content" as P_CONTENT {
-  top to bottom direction
-
+  left to right direction
   class Course {
     Long id
     String title
@@ -52,14 +40,12 @@ package "Learning Content" as P_CONTENT {
     Instant createdAt
     Instant publishedAt
   }
-
   class Lesson {
     Long id
     String title
     String contentUrl
     int orderIndex
   }
-
   class Assignment {
     Long id
     String title
@@ -70,18 +56,17 @@ package "Learning Content" as P_CONTENT {
   }
 }
 
-' =======================
-' Bottom-right: Enroll & Assess
-' =======================
-package "Enrollment & Assessment" as P_ENROLL {
-  top to bottom direction
-
+' ========== Tier 3: Enrollment ==========
+package "Enrollment" as P_ENROLL {
   class Enrollment {
     Long id
     Instant enrolledAt
     EnrollmentStatus status
   }
+}
 
+' ========== Tier 4: Submissions ==========
+package "Assessment" as P_ASSESS {
   class Submission {
     Long id
     Instant submittedAt
@@ -93,41 +78,38 @@ package "Enrollment & Assessment" as P_ENROLL {
   }
 }
 
-' =======================
-' Bottom-left: Common (enums)
-' =======================
+' ========== Common (enums) off to the side ==========
 package "Common" as P_COMMON {
+  hide <<enum>> members
   enum Role <<enum>> {
   ADMIN; INSTRUCTOR; STUDENT }
-  enum CourseStatus <<enum>> {
-  DRAFT; PUBLISHED; ARCHIVED }
-  enum EnrollmentStatus <<enum>> {
-  ACTIVE; CANCELLED; COMPLETED }
-  enum SubmissionStatus <<enum>> {
-  SUBMITTED; GRADED; RESUBMIT_REQUESTED }
+  enum CourseStatus <<enum>> { DRAFT; PUBLISHED; ARCHIVED }
+  enum EnrollmentStatus <<enum>> { ACTIVE; CANCELLED; COMPLETED }
+  enum SubmissionStatus <<enum>> { SUBMITTED; GRADED; RESUBMIT_REQUESTED }
 }
 
-' ----- Grid positioning (corner anchors) -----
-P_USERS   -[hidden]->     P_CONTENT
-P_COMMON  -[hidden]->     P_ENROLL
-P_USERS   -[hidden]down-> P_COMMON
+' ---- keep grid (packages stay in tiers)
+P_USERS   -[hidden]down-> P_CONTENT
 P_CONTENT -[hidden]down-> P_ENROLL
+P_ENROLL  -[hidden]down-> P_ASSESS
+P_USERS   -[hidden]->     P_COMMON
+P_CONTENT -[hidden]->     P_COMMON
+P_ENROLL  -[hidden]->     P_COMMON
+P_ASSESS  -[hidden]->     P_COMMON
 
 ' ---------- Inheritance ----------
 User <|-- Student
 User <|-- Instructor
 
-' ---------- Relationships (routed within rows/columns) ----------
-Instructor "1" -right-> "0..*" Course : creates
+' ---------- Relationships (all vertical within columns) ----------
+Instructor "1" -down-> "0..*" Course : creates
 Course "1" -down-> "0..*" Lesson : has
 Course "1" -down-> "0..*" Assignment : contains
 
 Student "1" -down-> "0..*" Enrollment : enrolls >
-Enrollment "1" -right-> "1" Course : for     ' stays on bottom row
+Enrollment "1" -up-> "1" Course : for
 
 Assignment "1" -down-> "0..*" Submission : receives >
-' Two options for author link; pick one:
-Submission "1" -left-> "1" Student : authoredBy >    ' bottom row → left
-' Submission ..left..> Student : authoredBy          ' (alternative: dashed, lighter)
+Submission "1" -up-> "1" Student : authoredBy >
 
 @enduml
