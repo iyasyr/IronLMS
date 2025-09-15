@@ -107,4 +107,16 @@ public class CourseController {
         service.deleteAssignment(courseId, assignmentId, auth);
         return ResponseEntity.noContent().build();
     }
+
+    @PermitAll
+    @GetMapping("/{id}/lessons")
+    public java.util.List<LessonSummaryResponse> lessons(@PathVariable Long id, Authentication auth) {
+        return service.listLessonsForRead(id, auth);
+    }
+
+    @PermitAll
+    @GetMapping("/{id}/assignments")
+    public java.util.List<AssignmentSummaryResponse> assignments(@PathVariable Long id, Authentication auth) {
+        return service.listAssignmentsForRead(id, auth);
+    }
 }
