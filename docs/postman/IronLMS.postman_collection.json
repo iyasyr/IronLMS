@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "IronLMS",
+    "_postman_id": "b3f7f9cf-6a6e-4b2e-8e31-ironlms",
+    "description": "IronLMS API — Iteration 6 smoke tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth / Login",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/auth/login",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"instructor@lms.local\",\n  \"password\": \"password\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('200 OK', () => pm.response.code === 200);",
+              "var json = pm.response.json();",
+              "pm.environment.set('token', json.token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ping (public)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/ping" }
+    },
+    {
+      "name": "Courses / List Published (public)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/courses?page=0&size=10" }
+    },
+    {
+      "name": "Courses / Create (instructor)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Java Basics\",\n  \"description\": \"Intro\"\n}" }
+      }
+    },
+    {
+      "name": "Courses / Update (publish)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Java Basics\",\n  \"description\": \"Intro\",\n  \"status\": \"PUBLISHED\"\n}" }
+      }
+    },
+    {
+      "name": "Lessons / Add",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1/lessons",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Lesson 1\",\n  \"contentUrl\": \"https://example.com/lesson1\",\n  \"orderIndex\": 1\n}" }
+      }
+    },
+    {
+      "name": "Lessons / Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1/lessons/1",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"Lesson 1 updated\",\n  \"contentUrl\": \"https://example.com/lesson1\",\n  \"orderIndex\": 1\n}" }
+      }
+    },
+    {
+      "name": "Lessons / Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/courses/1/lessons/1"
+      }
+    },
+    {
+      "name": "Assignments / Add",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1/assignments",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"HW1\",\n  \"instructions\": \"Repo URL\",\n  \"maxPoints\": 100,\n  \"allowLate\": true\n}" }
+      }
+    },
+    {
+      "name": "Assignments / Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1/assignments/1",
+        "body": { "mode": "raw", "raw": "{\n  \"title\": \"HW1 updated\",\n  \"instructions\": \"Repo URL\",\n  \"maxPoints\": 120,\n  \"allowLate\": false\n}" }
+      }
+    },
+    {
+      "name": "Assignments / Delete",
+      "request": {
+        "method": "DELETE",
+        "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+        "url": "{{baseUrl}}/api/courses/1/assignments/1"
+      }
+    },
+    {
+      "name": "Enrollment / Enroll (student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{studentToken}}" }
+        ],
+        "url": "{{baseUrl}}/api/courses/1/enroll"
+      }
+    },
+    {
+      "name": "Submission / Submit (student)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{studentToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": "{{baseUrl}}/api/assignments/1/submissions",
+        "body": { "mode": "raw", "raw": "{\n  \"artifactUrl\": \"https://github.com/user/hw1\"\n}" }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3315" },
+    { "key": "token", "value": "" },
+    { "key": "studentToken", "value": "" }
+  ]
+}

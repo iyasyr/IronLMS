@@ -20,7 +20,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<!-- for springdoc -->
-		<springdoc.version>2.6.0</springdoc.version>
+		<springdoc.version>2.8.11</springdoc.version>
 		<!-- for JJWT (used when we implement JWT issuing) -->
 		<jjwt.version>0.12.5</jjwt.version>
 	</properties>
