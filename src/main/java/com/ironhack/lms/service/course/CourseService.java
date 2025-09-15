@@ -110,6 +110,46 @@ public class CourseService {
         return assignments.save(a).getId();
     }
 
+    public void updateLesson(Long courseId, Long lessonId, LessonUpdateRequest req, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        requireOwnerOrAdmin(auth, c);
+        Lesson l = lessons.findById(lessonId).orElseThrow(() -> notFound("Lesson"));
+        if (!l.getCourse().getId().equals(courseId)) throw notFound("Lesson"); // hide cross-course
+        l.setTitle(req.title());
+        l.setContentUrl(req.contentUrl());
+        l.setOrderIndex(req.orderIndex());
+        lessons.save(l);
+    }
+
+    public void deleteLesson(Long courseId, Long lessonId, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        requireOwnerOrAdmin(auth, c);
+        Lesson l = lessons.findById(lessonId).orElseThrow(() -> notFound("Lesson"));
+        if (!l.getCourse().getId().equals(courseId)) throw notFound("Lesson");
+        lessons.delete(l);
+    }
+
+    public void updateAssignment(Long courseId, Long assignmentId, AssignmentUpdateRequest req, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        requireOwnerOrAdmin(auth, c);
+        Assignment a = assignments.findById(assignmentId).orElseThrow(() -> notFound("Assignment"));
+        if (!a.getCourse().getId().equals(courseId)) throw notFound("Assignment");
+        a.setTitle(req.title());
+        a.setInstructions(req.instructions());
+        a.setDueAt(req.dueAt());
+        a.setMaxPoints(req.maxPoints());
+        a.setAllowLate(req.allowLate());
+        assignments.save(a);
+    }
+
+    public void deleteAssignment(Long courseId, Long assignmentId, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        requireOwnerOrAdmin(auth, c);
+        Assignment a = assignments.findById(assignmentId).orElseThrow(() -> notFound("Assignment"));
+        if (!a.getCourse().getId().equals(courseId)) throw notFound("Assignment");
+        assignments.delete(a);
+    }
+
     // --- helpers ---
 
     private void requireOwnerOrAdmin(Authentication auth, Course c) {

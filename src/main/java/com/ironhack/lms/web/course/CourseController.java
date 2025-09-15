@@ -69,4 +69,42 @@ public class CourseController {
                                               Authentication auth) {
         return ResponseEntity.ok(service.addAssignment(id, req, auth));
     }
+
+    @PreAuthorize("hasAnyRole('INSTRUCTOR','ADMIN')")
+    @PutMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<Void> updateLesson(@PathVariable Long courseId,
+                                             @PathVariable Long lessonId,
+                                             @Valid @RequestBody LessonUpdateRequest req,
+                                             Authentication auth) {
+        service.updateLesson(courseId, lessonId, req, auth);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('INSTRUCTOR','ADMIN')")
+    @DeleteMapping("/{courseId}/lessons/{lessonId}")
+    public ResponseEntity<Void> deleteLesson(@PathVariable Long courseId,
+                                             @PathVariable Long lessonId,
+                                             Authentication auth) {
+        service.deleteLesson(courseId, lessonId, auth);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('INSTRUCTOR','ADMIN')")
+    @PutMapping("/{courseId}/assignments/{assignmentId}")
+    public ResponseEntity<Void> updateAssignment(@PathVariable Long courseId,
+                                                 @PathVariable Long assignmentId,
+                                                 @Valid @RequestBody AssignmentUpdateRequest req,
+                                                 Authentication auth) {
+        service.updateAssignment(courseId, assignmentId, req, auth);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyRole('INSTRUCTOR','ADMIN')")
+    @DeleteMapping("/{courseId}/assignments/{assignmentId}")
+    public ResponseEntity<Void> deleteAssignment(@PathVariable Long courseId,
+                                                 @PathVariable Long assignmentId,
+                                                 Authentication auth) {
+        service.deleteAssignment(courseId, assignmentId, auth);
+        return ResponseEntity.noContent().build();
+    }
 }

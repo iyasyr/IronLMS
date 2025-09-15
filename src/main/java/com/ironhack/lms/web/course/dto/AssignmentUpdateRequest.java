@@ -3,7 +3,7 @@ package com.ironhack.lms.web.course.dto;
 import jakarta.validation.constraints.*;
 import java.time.Instant;
 
-public record AssignmentCreateRequest(
+public record AssignmentUpdateRequest(
         @NotBlank @Size(max = 200) String title,
         @Size(max = 50000) String instructions,
         Instant dueAt,
