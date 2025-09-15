@@ -176,4 +176,25 @@ public class CourseService {
                 c.getPublishedAt()
         );
     }
+
+    public java.util.List<LessonSummaryResponse> listLessonsForRead(Long courseId, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        if (c.getStatus() != CourseStatus.PUBLISHED) {
+            requireOwnerOrAdmin(auth, c); // throws 401/403 if not allowed
+        }
+        return lessons.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
+                .map(l -> new LessonSummaryResponse(l.getId(), l.getTitle(), l.getContentUrl(), l.getOrderIndex()))
+                .toList();
+    }
+
+    public java.util.List<AssignmentSummaryResponse> listAssignmentsForRead(Long courseId, Authentication auth) {
+        Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
+        if (c.getStatus() != CourseStatus.PUBLISHED) {
+            requireOwnerOrAdmin(auth, c);
+        }
+        return assignments.findByCourse_Id(courseId).stream()
+                .map(a -> new AssignmentSummaryResponse(a.getId(), a.getTitle(), a.getInstructions(),
+                        a.getMaxPoints(), a.isAllowLate(), a.getDueAt()))
+                .toList();
+    }
 }
