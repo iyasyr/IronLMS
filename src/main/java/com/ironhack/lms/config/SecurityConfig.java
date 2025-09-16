@@ -40,7 +40,10 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/api/ping", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/courses/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/courses").permitAll()  // Only public course listing
+                        .requestMatchers(HttpMethod.GET, "/api/courses/*").permitAll()  // Only public course details (single course by ID)
+                        .requestMatchers(HttpMethod.GET, "/api/courses/*/lessons").authenticated()  // Lessons require auth
+                        .requestMatchers(HttpMethod.GET, "/api/courses/*/assignments").authenticated()  // Assignments require auth
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e

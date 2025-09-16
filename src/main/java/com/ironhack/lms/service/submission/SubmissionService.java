@@ -81,7 +81,7 @@ public class SubmissionService {
 
     public Page<SubmissionResponse> listByCourse(Long courseId, Authentication auth, Pageable pageable) {
         User who = requireAuth(auth);
-        if (canAccessCourseSubmissions(who, courseId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (!canAccessCourseSubmissions(who, courseId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return submissions.findByAssignment_Course_Id(courseId, pageable).map(this::toDto);
     }
 
@@ -89,7 +89,7 @@ public class SubmissionService {
     public SubmissionResponse grade(Long submissionId, GradeRequest req, Authentication auth) {
         User who = requireAuth(auth);
         Submission s = submissions.findById(submissionId).orElseThrow(() -> notFound("Submission"));
-        if (canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
+        if (!canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         int max = s.getAssignment().getMaxPoints();
@@ -109,7 +109,7 @@ public class SubmissionService {
     public SubmissionResponse requestResubmission(Long submissionId, ResubmitRequest req, Authentication auth) {
         User who = requireAuth(auth);
         Submission s = submissions.findById(submissionId).orElseThrow(() -> notFound("Submission"));
-        if (canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
+        if (!canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         s.setStatus(SubmissionStatus.RESUBMIT_REQUESTED);
@@ -135,9 +135,9 @@ public class SubmissionService {
     }
 
     private boolean canAccessCourseSubmissions(User who, Long courseId) {
-        return who.getRole() != Role.ADMIN &&
-                (who.getRole() != Role.INSTRUCTOR ||
-                        !courses.existsByIdAndInstructor_Id(courseId, who.getId()));
+        return who.getRole() == Role.ADMIN ||
+                (who.getRole() == Role.INSTRUCTOR &&
+                        courses.existsByIdAndInstructor_Id(courseId, who.getId()));
     }
 
     private ResponseStatusException notFound(String what) {
