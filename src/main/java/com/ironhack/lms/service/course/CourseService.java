@@ -1,10 +1,13 @@
 package com.ironhack.lms.service.course;
 
 import com.ironhack.lms.domain.course.*;
+import com.ironhack.lms.domain.enrollment.EnrollmentStatus;
 import com.ironhack.lms.domain.user.Instructor;
 import com.ironhack.lms.domain.user.Role;
+import com.ironhack.lms.domain.user.Student;
 import com.ironhack.lms.domain.user.User;
 import com.ironhack.lms.repository.course.*;
+import com.ironhack.lms.repository.enrollment.EnrollmentRepository;
 import com.ironhack.lms.repository.user.UserRepository;
 import com.ironhack.lms.web.course.dto.*;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +28,7 @@ public class CourseService {
     private final LessonRepository lessons;
     private final AssignmentRepository assignments;
     private final UserRepository users;
+    private final EnrollmentRepository enrollments;
 
     // --- Queries ---
 
@@ -179,22 +183,88 @@ public class CourseService {
 
     public java.util.List<LessonSummaryResponse> listLessonsForRead(Long courseId, Authentication auth) {
         Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
-        if (c.getStatus() != CourseStatus.PUBLISHED) {
-            requireOwnerOrAdmin(auth, c); // throws 401/403 if not allowed
+        
+        // If course is published, check if user is enrolled or is instructor/admin
+        if (c.getStatus() == CourseStatus.PUBLISHED) {
+            if (auth != null) {
+                User u = users.findByEmail(auth.getName()).orElse(null);
+                if (u != null) {
+                    // Allow instructors and admins to see lessons
+                    if (u.getRole() == Role.ADMIN || 
+                        (u.getRole() == Role.INSTRUCTOR && c.getInstructor().getId().equals(u.getId()))) {
+                        return lessons.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
+                                .map(l -> new LessonSummaryResponse(l.getId(), l.getTitle(), l.getContentUrl(), l.getOrderIndex()))
+                                .toList();
+                    }
+                    // For students, check if enrolled
+                    if (u.getRole() == Role.STUDENT && u instanceof Student student) {
+                        // Check if student is enrolled and enrollment is active
+                        boolean isEnrolled = enrollments.existsByCourse_IdAndStudent_IdAndStatus(
+                                courseId, student.getId(), EnrollmentStatus.ACTIVE);
+                        if (!isEnrolled) {
+                            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access lessons");
+                        }
+                        return lessons.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
+                                .map(l -> new LessonSummaryResponse(l.getId(), l.getTitle(), l.getContentUrl(), l.getOrderIndex()))
+                                .toList();
+                    }
+                    // If user is not instructor/admin/student, deny access
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access lessons");
+                }
+            }
+            // If not authenticated, don't allow access to lessons
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access lessons");
+        } else {
+            // For draft courses, only owner/instructor or admin can see
+            requireOwnerOrAdmin(auth, c);
+            return lessons.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
+                    .map(l -> new LessonSummaryResponse(l.getId(), l.getTitle(), l.getContentUrl(), l.getOrderIndex()))
+                    .toList();
         }
-        return lessons.findByCourse_IdOrderByOrderIndexAsc(courseId).stream()
-                .map(l -> new LessonSummaryResponse(l.getId(), l.getTitle(), l.getContentUrl(), l.getOrderIndex()))
-                .toList();
     }
 
     public java.util.List<AssignmentSummaryResponse> listAssignmentsForRead(Long courseId, Authentication auth) {
         Course c = courses.findById(courseId).orElseThrow(() -> notFound("Course"));
-        if (c.getStatus() != CourseStatus.PUBLISHED) {
+        
+        // If course is published, check if user is enrolled or is instructor/admin
+        if (c.getStatus() == CourseStatus.PUBLISHED) {
+            if (auth != null) {
+                User u = users.findByEmail(auth.getName()).orElse(null);
+                if (u != null) {
+                    // Allow instructors and admins to see assignments
+                    if (u.getRole() == Role.ADMIN || 
+                        (u.getRole() == Role.INSTRUCTOR && c.getInstructor().getId().equals(u.getId()))) {
+                        return assignments.findByCourse_Id(courseId).stream()
+                                .map(a -> new AssignmentSummaryResponse(a.getId(), a.getTitle(), a.getInstructions(),
+                                        a.getMaxPoints(), a.isAllowLate(), a.getDueAt()))
+                                .toList();
+                    }
+                    // For students, check if enrolled
+                    if (u.getRole() == Role.STUDENT && u instanceof Student student) {
+                        // Check if student is enrolled and enrollment is active
+                        boolean isEnrolled = enrollments.existsByCourse_IdAndStudent_IdAndStatus(
+                                courseId, student.getId(), EnrollmentStatus.ACTIVE);
+                        if (!isEnrolled) {
+                            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access assignments");
+                        }
+                        return assignments.findByCourse_Id(courseId).stream()
+                                .map(a -> new AssignmentSummaryResponse(a.getId(), a.getTitle(), a.getInstructions(),
+                                        a.getMaxPoints(), a.isAllowLate(), a.getDueAt()))
+                                .toList();
+                    }
+                    // If user is not instructor/admin/student, deny access
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access assignments");
+                }
+            }
+            // If not authenticated, don't allow access to assignments
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Must be enrolled to access assignments");
+        } else {
+            // For draft courses, only owner/instructor or admin can see
             requireOwnerOrAdmin(auth, c);
+            return assignments.findByCourse_Id(courseId).stream()
+                    .map(a -> new AssignmentSummaryResponse(a.getId(), a.getTitle(), a.getInstructions(),
+                            a.getMaxPoints(), a.isAllowLate(), a.getDueAt()))
+                    .toList();
         }
-        return assignments.findByCourse_Id(courseId).stream()
-                .map(a -> new AssignmentSummaryResponse(a.getId(), a.getTitle(), a.getInstructions(),
-                        a.getMaxPoints(), a.isAllowLate(), a.getDueAt()))
-                .toList();
     }
 }
