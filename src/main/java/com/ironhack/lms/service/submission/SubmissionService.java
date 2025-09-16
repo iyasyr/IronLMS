@@ -2,11 +2,11 @@ package com.ironhack.lms.service.submission;
 
 import com.ironhack.lms.domain.course.Assignment;
 import com.ironhack.lms.domain.course.Course;
-import com.ironhack.lms.domain.enrollment.EnrollmentStatus;
 import com.ironhack.lms.domain.submission.Submission;
 import com.ironhack.lms.domain.submission.SubmissionStatus;
 import com.ironhack.lms.domain.user.*;
 import com.ironhack.lms.repository.course.AssignmentRepository;
+import com.ironhack.lms.repository.course.CourseRepository;
 import com.ironhack.lms.repository.enrollment.EnrollmentRepository;
 import com.ironhack.lms.repository.submission.SubmissionRepository;
 import com.ironhack.lms.repository.user.UserRepository;
@@ -17,10 +17,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 
+@Transactional(readOnly = true)
 @Service
 @RequiredArgsConstructor
 public class SubmissionService {
@@ -29,9 +31,11 @@ public class SubmissionService {
     private final AssignmentRepository assignments;
     private final EnrollmentRepository enrollments;
     private final UserRepository users;
+    private final CourseRepository courses;
 
     // ----- Student actions -----
 
+    @Transactional
     public SubmissionResponse submit(Long assignmentId, SubmissionCreateRequest req, Authentication auth) {
         Student me = requireStudent(auth);
 
@@ -77,14 +81,15 @@ public class SubmissionService {
 
     public Page<SubmissionResponse> listByCourse(Long courseId, Authentication auth, Pageable pageable) {
         User who = requireAuth(auth);
-        if (!canAccessCourseSubmissions(who, courseId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        if (canAccessCourseSubmissions(who, courseId)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         return submissions.findByAssignment_Course_Id(courseId, pageable).map(this::toDto);
     }
 
+    @Transactional
     public SubmissionResponse grade(Long submissionId, GradeRequest req, Authentication auth) {
         User who = requireAuth(auth);
         Submission s = submissions.findById(submissionId).orElseThrow(() -> notFound("Submission"));
-        if (!canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
+        if (canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         int max = s.getAssignment().getMaxPoints();
@@ -100,10 +105,11 @@ public class SubmissionService {
         return toDto(s);
     }
 
+    @Transactional
     public SubmissionResponse requestResubmission(Long submissionId, ResubmitRequest req, Authentication auth) {
         User who = requireAuth(auth);
         Submission s = submissions.findById(submissionId).orElseThrow(() -> notFound("Submission"));
-        if (!canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
+        if (canAccessCourseSubmissions(who, s.getAssignment().getCourse().getId()))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 
         s.setStatus(SubmissionStatus.RESUBMIT_REQUESTED);
@@ -129,12 +135,9 @@ public class SubmissionService {
     }
 
     private boolean canAccessCourseSubmissions(User who, Long courseId) {
-        return who.getRole() == Role.ADMIN ||
-                (who.getRole() == Role.INSTRUCTOR &&
-                        assignments.findByCourse_Id(courseId).stream()
-                                .findFirst()
-                                .map(a -> ((Instructor) who).getId().equals(a.getCourse().getInstructor().getId()))
-                                .orElse(false));
+        return who.getRole() != Role.ADMIN &&
+                (who.getRole() != Role.INSTRUCTOR ||
+                        !courses.existsByIdAndInstructor_Id(courseId, who.getId()));
     }
 
     private ResponseStatusException notFound(String what) {

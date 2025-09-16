@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface CourseRepository extends JpaRepository<Course, Long> {
     Page<Course> findByStatus(CourseStatus status, Pageable pageable);
     Page<Course> findByInstructor_Id(Long instructorId, Pageable pageable);
+    boolean existsByIdAndInstructor_Id(Long courseId, Long instructorId);
 }
