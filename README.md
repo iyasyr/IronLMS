@@ -88,13 +88,13 @@ classDiagram
     
     User <|-- Student
     User <|-- Instructor
-    Instructor ||--o{ Course : creates
-    Course ||--o{ Lesson : contains
-    Course ||--o{ Assignment : has
-    Student ||--o{ Enrollment : makes
-    Course ||--o{ Enrollment : receives
-    Assignment ||--o{ Submission : receives
-    Student ||--o{ Submission : submits
+    Instructor --> Course : creates
+    Course --> Lesson : contains
+    Course --> Assignment : has
+    Student --> Enrollment : makes
+    Course --> Enrollment : receives
+    Assignment --> Submission : receives
+    Student --> Submission : submits
 ```
 
 ### Entity Relationships
