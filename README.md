@@ -1,5 +1,3 @@
-# ⚠️ Warning: README is not finished yet.
-
 # IronLMS
 
 ## Description of the Project
@@ -311,9 +309,7 @@ open target/site/jacoco/index.html
 ## Extra Links
 
 ### Project Management
-- **Trello Board**: [Add your Trello board link here]
-- **GitHub Repository**: [Add your GitHub repository link here]
-- **Project Wiki**: [Add your project wiki link here]
+- **Management**: [Jira Board](https://ironlms.atlassian.net/jira/software/projects/IRON/boards/3?atlOrigin=eyJpIjoiYjFhM2VhZWUwYzBiNDA5Njk4ZGJlY2RlMGEzOTkxODUiLCJwIjoiaiJ9)
 
 ### Documentation
 - **API Documentation**: http://localhost:3315/swagger-ui.html
@@ -321,9 +317,7 @@ open target/site/jacoco/index.html
 - **Class Diagram**: `docs/uml/lms-class-diagram.puml`
 
 ### Presentations
-- **Project Presentation Slides**: [Add your presentation slides link here]
-- **Demo Video**: [Add your demo video link here]
-- **Architecture Overview**: [Add your architecture document link here]
+- **Project Presentation Slides**: [Google Slides](https://docs.google.com/presentation/d/e/2PACX-1vQtf1T7RQm2Qsm-2z8f-f3zabUNJjxhmFwnhHQ58ueSoIQlcsDW_rKsV5vDxooLcBht7q_CCaw9rU7w/pub?start=false&loop=false&delayms=3000)
 
 ### Development Resources
 - **Code Coverage Report**: `target/site/jacoco/index.html`
@@ -391,11 +385,6 @@ open target/site/jacoco/index.html
 - [Mockito Documentation](https://javadoc.io/doc/org.mockito/mockito-core/latest/org/mockito/Mockito.html)
 - [Spring Boot Testing](https://docs.spring.io/spring-boot/docs/current/reference/html/spring-boot-features.html#boot-features-testing)
 
-### Community & Support
-- [Spring Community](https://spring.io/community)
-- [Stack Overflow - Spring Boot](https://stackoverflow.com/questions/tagged/spring-boot)
-- [GitHub Issues](https://github.com/spring-projects/spring-boot/issues)
-
 ---
 
 ## License
@@ -415,3 +404,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built for IronHack Module 2 Final Project
 - Special thanks to the Spring Boot community for excellent documentation
 - Inspired by modern LMS platforms and clean architecture principles
+
+## Team Members
+
+- **Ilia Iasyr** — Developer  
+- **Cursor** — Used as testing assistant
+
